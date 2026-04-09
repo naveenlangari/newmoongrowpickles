@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel – Moon Grow Pickle</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --saffron:#E8821A; --green:#2D6A2D; --leaf:#4A9442;
+    --cream:#FDF6E9; --dark:#1C1008; --muted:#7A6248;
+    --card:#fff; --border:#E8D5B0; --red:#C0392B; --blue:#2471A3;
+    --sidebar:220px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:#F5EFE6;color:var(--dark);}
+
+  /* LOGIN */
+  .login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#2D6A2D,#E8821A);display:flex;align-items:center;justify-content:center;z-index:9999;}
+  .login-box{background:#fff;border-radius:24px;padding:48px 40px;width:380px;max-width:90vw;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.2);}
+  .login-logo{font-size:3rem;margin-bottom:12px;}
+  .login-title{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:var(--dark);margin-bottom:6px;}
+  .login-sub{color:var(--muted);font-size:0.9rem;margin-bottom:28px;}
+  .login-box input{width:100%;border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:0.95rem;font-family:'DM Sans',sans-serif;margin-bottom:12px;outline:none;transition:border-color .2s;}
+  .login-box input:focus{border-color:var(--saffron);}
+  .login-btn{width:100%;background:var(--green);color:#fff;border:none;border-radius:10px;padding:13px;font-size:1rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;}
+  .login-btn:hover{background:var(--leaf);}
+  .login-error{color:var(--red);font-size:0.85rem;margin-top:10px;display:none;}
+
+  /* LAYOUT */
+  .admin-wrap{display:flex;min-height:100vh;}
+  .sidebar{width:var(--sidebar);background:var(--dark);padding:24px 0;position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:100;}
+  .sidebar-logo{padding:0 20px 24px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:16px;}
+  .sidebar-logo-text{font-family:'Playfair Display',serif;color:#fff;font-size:1.1rem;font-weight:700;}
+  .sidebar-logo-text span{color:var(--saffron);}
+  .sidebar-logo-sub{color:#8A7A6A;font-size:0.75rem;margin-top:2px;}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:12px 20px;color:#C8B89A;text-decoration:none;font-size:0.92rem;font-weight:500;cursor:pointer;transition:all .2s;border:none;background:none;width:100%;text-align:left;}
+  .nav-item:hover,.nav-item.active{background:rgba(232,130,26,.15);color:var(--saffron);}
+  .nav-item .nav-icon{font-size:1.2rem;width:22px;}
+  .sidebar-bottom{margin-top:auto;padding:16px 20px;border-top:1px solid rgba(255,255,255,.1);}
+  .main{margin-left:var(--sidebar);flex:1;padding:30px;min-height:100vh;}
+  .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+  .page-title{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;}
+  .back-btn{background:var(--saffron);color:#fff;border:none;border-radius:50px;padding:10px 20px;font-size:0.9rem;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;}
+  .back-btn:hover{background:var(--green);}
+
+  /* STATS */
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+  .stat-card{background:#fff;border-radius:16px;padding:20px 22px;border:1px solid var(--border);}
+  .stat-card-num{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;color:var(--green);}
+  .stat-card-label{color:var(--muted);font-size:0.85rem;margin-top:4px;}
+  .stat-card-icon{font-size:1.8rem;margin-bottom:8px;}
+
+  /* SECTION */
+  .section{display:none;}
+  .section.active{display:block;}
+
+  /* TABLE */
+  .table-card{background:#fff;border-radius:16px;border:1px solid var(--border);overflow:hidden;}
+  .table-toolbar{padding:16px 20px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+  .table-search{border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;flex:1;min-width:160px;}
+  .table-search:focus{border-color:var(--saffron);}
+  .cat-filter{border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:0.88rem;outline:none;cursor:pointer;}
+  table{width:100%;border-collapse:collapse;}
+  th{text-align:left;padding:12px 16px;font-size:0.82rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;background:#FAFAF7;border-bottom:1px solid var(--border);}
+  td{padding:12px 16px;border-bottom:1px solid #F5EFE6;font-size:0.9rem;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:#FDFAF4;}
+  .badge{display:inline-block;padding:3px 10px;border-radius:50px;font-size:0.75rem;font-weight:600;}
+  .badge-pickle{background:#FFF3E0;color:#E8821A;}
+  .badge-jam{background:#FCE4EC;color:#C2185B;}
+  .badge-chutney{background:#E8F5E9;color:#2E7D32;}
+  .badge-murabba{background:#FFF8E1;color:#F9A825;}
+  .badge-fruits{background:#E3F2FD;color:#1565C0;}
+  .badge-oils{background:#FFF3E0;color:#8D6E63;}
+  .badge-natural{background:#F3E5F5;color:#6A1B9A;}
+  .action-btn{border:none;border-radius:6px;padding:6px 12px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+  .edit-btn{background:#E3F2FD;color:var(--blue);}
+  .edit-btn:hover{background:var(--blue);color:#fff;}
+  .del-btn{background:#FFEBEE;color:var(--red);}
+  .del-btn:hover{background:var(--red);color:#fff;}
+  .add-new-btn{background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;}
+  .add-new-btn:hover{background:var(--leaf);}
+  .product-img-cell{width:44px;height:44px;border-radius:8px;object-fit:cover;border:1px solid var(--border);background:#F5EFE6;display:flex;align-items:center;justify-content:center;font-size:1.4rem;}
+  .product-img-cell img{width:100%;height:100%;border-radius:8px;object-fit:cover;}
+  .no-data{text-align:center;padding:40px;color:var(--muted);}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(28,16,8,.5);z-index:5000;display:none;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:#fff;border-radius:20px;padding:32px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;position:relative;}
+  .modal-title{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;margin-bottom:24px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .form-group{display:flex;flex-direction:column;gap:6px;}
+  .form-group.full{grid-column:1/-1;}
+  .form-group label{font-size:0.85rem;font-weight:600;color:var(--muted);}
+  .form-group input,.form-group select,.form-group textarea{border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;transition:border-color .2s;}
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--saffron);}
+  .form-group textarea{height:80px;resize:none;}
+  .modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+  .save-btn{background:var(--green);color:#fff;border:none;border-radius:8px;padding:10px 24px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  .save-btn:hover{background:var(--leaf);}
+  .cancel-btn{background:var(--border);color:var(--dark);border:none;border-radius:8px;padding:10px 18px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  .img-preview{width:80px;height:80px;border-radius:10px;object-fit:cover;border:1px solid var(--border);margin-top:8px;display:none;}
+  .gdrive-hint{font-size:0.78rem;color:var(--muted);margin-top:4px;line-height:1.5;}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--green);color:#fff;padding:11px 24px;border-radius:50px;font-weight:600;font-size:.92rem;z-index:9999;transition:transform .4s;pointer-events:none;}
+  .toast.show{transform:translateX(-50%) translateY(0);}
+
+  /* RESPONSIVE */
+  @media(max-width:768px){
+    .sidebar{width:60px;}
+    .nav-item span:not(.nav-icon){display:none;}
+    .sidebar-logo-text,.sidebar-logo-sub{display:none;}
+    .main{margin-left:60px;}
+    .stats-row{grid-template-columns:1fr 1fr;}
+    .form-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">🏡</div>
+    <div class="login-title">Admin Panel</div>
+    <div class="login-sub">Moon Grow Pickle — Secure Access</div>
+    <input type="text" id="adminUser" placeholder="Username" value="admin">
+    <input type="password" id="adminPass" placeholder="Password">
+    <button class="login-btn" onclick="doLogin()">Login →</button>
+    <div class="login-error" id="loginError">❌ Invalid credentials. Try admin / moongrow@2024</div>
+  </div>
+</div>
+
+<!-- ADMIN LAYOUT -->
+<div class="admin-wrap" id="adminWrap" style="display:none">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">Moon Grow <span>🥒</span></div>
+      <div class="sidebar-logo-sub">Admin Dashboard</div>
+    </div>
+    <button class="nav-item active" onclick="showSection('products')"><span class="nav-icon">📦</span><span>Products</span></button>
+    <button class="nav-item" onclick="showSection('categories')"><span class="nav-icon">🏷️</span><span>Categories</span></button>
+    <button class="nav-item" onclick="showSection('settings')"><span class="nav-icon">⚙️</span><span>Settings</span></button>
+    <div class="sidebar-bottom">
+      <button class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span><span>Logout</span></button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="top-bar">
+      <h1 class="page-title" id="pageTitle">Products</h1>
+      <a href="index.html" class="back-btn">← View Website</a>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row" id="statsRow"></div>
+
+    <!-- PRODUCTS SECTION -->
+    <div class="section active" id="sec-products">
+      <div class="table-card">
+        <div class="table-toolbar">
+          <input class="table-search" id="prodSearch" placeholder="Search products…" oninput="renderTable()">
+          <select class="cat-filter" id="prodCatFilter" onchange="renderTable()">
+            <option value="">All Categories</option>
+          </select>
+          <button class="add-new-btn" onclick="openModal()">+ Add Product</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr>
+              <th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Unit</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="prodTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CATEGORIES SECTION -->
+    <div class="section" id="sec-categories">
+      <div class="table-card">
+        <div class="table-toolbar" style="justify-content:space-between">
+          <span style="font-weight:600;color:var(--muted)">Manage product categories</span>
+        </div>
+        <div id="catList" style="padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS SECTION -->
+    <div class="section" id="sec-settings">
+      <div style="display:grid;gap:16px;max-width:500px">
+        <div class="table-card" style="padding:24px">
+          <h3 style="font-family:'Playfair Display',serif;margin-bottom:16px">Store Settings</h3>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="form-group"><label>WhatsApp Number</label><input type="text" id="settWa" value="919467554441"></div>
+            <div class="form-group"><label>Store Name</label><input type="text" id="settName" value="Moon Grow Pickle"></div>
+            <div style="display:flex;gap:10px;margin-top:8px">
+              <button class="save-btn" onclick="saveSettings()">Save Settings</button>
+            </div>
+          </div>
+        </div>
+        <div class="table-card" style="padding:24px">
+          <h3 style="font-family:'Playfair Display',serif;margin-bottom:12px">Data Management</h3>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="save-btn" onclick="exportData()">📥 Export Products JSON</button>
+            <button class="action-btn del-btn" onclick="resetData()" style="padding:10px 18px">🔄 Reset to Defaults</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 class="modal-title" id="modalTitle">Add New Product</h3>
+    <div class="form-grid">
+      <input type="hidden" id="editId">
+      <div class="form-group full"><label>Product Name *</label><input type="text" id="fName" placeholder="e.g. Mango Pickle"></div>
+      <div class="form-group"><label>Category *</label>
+        <select id="fCat">
+          <option>Pickles</option><option>Jams</option><option>Chutneys</option><option>Murabba</option><option>Fruits</option><option>Natural</option>
+          <option>Oils</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Emoji Icon</label><input type="text" id="fEmoji" placeholder="🥒"></div>
+      <div class="form-group"><label>Price (₹) *</label><input type="number" id="fPrice" placeholder="150" min="0"></div>
+      <div class="form-group"><label>Unit</label><input type="text" id="fUnit" placeholder="250g"></div>
+      <div class="form-group full"><label>Description</label><textarea id="fDesc" placeholder="Short product description…"></textarea></div>
+      <div class="form-group full">
+        <label>Product Image URL</label>
+        <input type="text" id="fImage" placeholder="https://drive.google.com/…" oninput="previewImg()">
+        <div class="gdrive-hint">
+          📌 <strong>Google Drive:</strong> Open image → Share → Anyone with link → Copy link → Paste here.<br>
+          The app will auto-convert Drive links to direct image URLs.
+        </div>
+        <img class="img-preview" id="imgPreview" alt="Preview">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+      <button class="save-btn" onclick="saveProduct()">💾 Save Product</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== AUTH ==========
+const ADMIN_USER = 'admin', ADMIN_PASS = 'moongrow@2024';
+function doLogin(){
+  const u=document.getElementById('adminUser').value;
+  const p=document.getElementById('adminPass').value;
+  if(u===ADMIN_USER && p===ADMIN_PASS){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('adminWrap').style.display='flex';
+    init();
+  } else {
+    document.getElementById('loginError').style.display='block';
+  }
+}
+document.getElementById('adminPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+function logout(){
+  document.getElementById('adminWrap').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+}
+
+// ========== DATA ==========
+const DEFAULT_PRODUCTS = [
+  {id:1,name:"Mango Pickle (Aam Ka Achar)",category:"Pickles",emoji:"🥭",price:150,unit:"250g",desc:"Classic tangy raw mango pickle with mustard & spices. A Haryanvi staple!",image:""},
+  {id:2,name:"Mixed Vegetable Pickle",category:"Pickles",emoji:"🥒",price:180,unit:"250g",desc:"A medley of seasonal vegetables pickled in mustard oil and aromatic spices.",image:""},
+  {id:3,name:"Lemon Pickle (Nimbu Achar)",category:"Pickles",emoji:"🍋",price:130,unit:"250g",desc:"Sun-dried lemon pickle with red chilli, salt and spices. Perfectly tangy.",image:""},
+  {id:4,name:"Green Chilli Pickle (Hari Mirch)",category:"Pickles",emoji:"🌶️",price:120,unit:"200g",desc:"Fiery whole green chillies stuffed with mustard and spices.",image:""},
+  {id:5,name:"Garlic Pickle (Lehsun Achar)",category:"Pickles",emoji:"🧄",price:140,unit:"200g",desc:"Bold garlic cloves marinated in spicy mustard oil — great digestive!",image:""},
+  {id:6,name:"Carrot Pickle (Gajar Achar)",category:"Pickles",emoji:"🥕",price:130,unit:"250g",desc:"Crunchy carrot pieces in mustard oil with whole spices.",image:""},
+  {id:7,name:"Amla Pickle (Gooseberry)",category:"Pickles",emoji:"🫐",price:160,unit:"250g",desc:"Indian gooseberry pickled traditionally — rich in Vitamin C.",image:""},
+  {id:8,name:"Red Chilli Pickle (Lal Mirch)",category:"Pickles",emoji:"🌶️",price:120,unit:"200g",desc:"Sun-dried whole red chillies in mustard oil — deeply spiced.",image:""},
+  {id:9,name:"Jackfruit Pickle (Kathal Achar)",category:"Pickles",emoji:"🍈",price:200,unit:"250g",desc:"Raw jackfruit pickled with traditional Haryanvi spice blend.",image:""},
+  {id:10,name:"Turmeric Pickle (Haldi Achar)",category:"Pickles",emoji:"🌿",price:150,unit:"200g",desc:"Fresh turmeric root pickle with lemon — a immunity booster!",image:""},
+  {id:11,name:"Ginger Pickle (Adrak Achar)",category:"Pickles",emoji:"🫚",price:140,unit:"200g",desc:"Tangy ginger slices pickled with lemon juice and spices.",image:""},
+  {id:12,name:"Onion Pickle (Pyaaz Achar)",category:"Pickles",emoji:"🧅",price:120,unit:"250g",desc:"Crunchy onion rings in vinegar and spices. Best with dal!",image:""},
+  {id:13,name:"Mango Jam (Aam Jam)",category:"Jams",emoji:"🥭",price:160,unit:"250g",desc:"Sweet and smooth mango jam made from pure Haryanvi mangoes. No artificial colour.",image:""},
+  {id:14,name:"Amla Jam (Gooseberry Jam)",category:"Jams",emoji:"🫐",price:150,unit:"250g",desc:"Healthy amla jam packed with Vitamin C. Perfect with roti or bread.",image:""},
+  {id:15,name:"Mixed Fruit Jam",category:"Jams",emoji:"🍓",price:180,unit:"250g",desc:"A colourful blend of seasonal fruits — sweet, tangy and delicious.",image:""},
+  {id:16,name:"Guava Jam (Amrood Jam)",category:"Jams",emoji:"💚",price:150,unit:"250g",desc:"Thick and flavourful guava jam with a beautiful pink hue.",image:""},
+  {id:17,name:"Strawberry Jam",category:"Jams",emoji:"🍓",price:200,unit:"250g",desc:"Classic red strawberry jam — sweet, vibrant and irresistible.",image:""},
+  {id:18,name:"Apple Jam (Seb Jam)",category:"Jams",emoji:"🍎",price:170,unit:"250g",desc:"Smooth and mildly sweet apple jam from fresh Himachali apples.",image:""},
+  {id:19,name:"Tomato Chutney",category:"Chutneys",emoji:"🍅",price:110,unit:"200g",desc:"Sweet and tangy tomato chutney with ginger and spices. Great with snacks.",image:""},
+  {id:20,name:"Mint Chutney (Pudina)",category:"Chutneys",emoji:"🌿",price:100,unit:"200g",desc:"Fresh green mint chutney with lemon and chillies — the classic dip.",image:""},
+  {id:21,name:"Tamarind Chutney (Imli)",category:"Chutneys",emoji:"🟤",price:110,unit:"200g",desc:"Sweet and sour imli chutney — the soul of every chaat.",image:""},
+  {id:22,name:"Coriander Chutney (Dhaniya)",category:"Chutneys",emoji:"🌿",price:100,unit:"200g",desc:"Vibrant green coriander chutney with garlic and green chillies.",image:""},
+  {id:23,name:"Garlic Chutney (Lehsun)",category:"Chutneys",emoji:"🧄",price:120,unit:"200g",desc:"Spicy and pungent garlic chutney — pairs perfectly with bajre ki roti.",image:""},
+  {id:24,name:"Mango Chutney (Aam)",category:"Chutneys",emoji:"🥭",price:130,unit:"200g",desc:"Sweet mango chutney with a hint of spice — the perfect condiment.",image:""},
+  {id:25,name:"Amla Murabba",category:"Murabba",emoji:"🫐",price:250,unit:"500g",desc:"Whole amla preserved in sugar syrup — a traditional health tonic.",image:""},
+  {id:26,name:"Mango Murabba (Aam Murabba)",category:"Murabba",emoji:"🥭",price:220,unit:"500g",desc:"Raw mango pieces in jaggery syrup. A summer digestive delight.",image:""},
+  {id:27,name:"Carrot Murabba (Gajar)",category:"Murabba",emoji:"🥕",price:200,unit:"500g",desc:"Soft carrot pieces in sugar syrup with cardamom — great for winters.",image:""},
+  {id:28,name:"Ginger Murabba (Adrak)",category:"Murabba",emoji:"🫚",price:230,unit:"500g",desc:"Preserved ginger in sugar — used as a natural remedy for digestion.",image:""},
+  {id:29,name:"Bel Murabba",category:"Murabba",emoji:"🌰",price:260,unit:"500g",desc:"Wood apple murabba — an ancient Ayurvedic health food.",image:""},
+  {id:30,name:"Apple Murabba (Seb)",category:"Murabba",emoji:"🍎",price:240,unit:"500g",desc:"Apple pieces preserved in sugar syrup with saffron and cardamom.",image:""},
+  {id:31,name:"Fresh Amla (Gooseberry)",category:"Fruits",emoji:"🫐",price:80,unit:"250g",desc:"Freshly harvested Indian gooseberry — rich in Vitamin C and antioxidants.",image:""},
+  {id:32,name:"Fresh Mango (Desi Aam)",category:"Fruits",emoji:"🥭",price:120,unit:"500g",desc:"Sweet and juicy desi Haryanvi mangoes — seasonal and natural.",image:""},
+  {id:33,name:"Fresh Guava (Amrood)",category:"Fruits",emoji:"💚",price:60,unit:"500g",desc:"Crunchy and sweet guava fresh from local farms.",image:""},
+  {id:34,name:"Fresh Lemon (Nimbu)",category:"Fruits",emoji:"🍋",price:40,unit:"250g",desc:"Tangy fresh lemons — multipurpose for cooking, pickling and drinks.",image:""},
+  {id:35,name:"Bel (Wood Apple)",category:"Fruits",emoji:"🌰",price:80,unit:"piece",desc:"Fresh bel fruit — great for making sherbat and murabba.",image:""},
+  {id:36,name:"Dry Fruits Mix",category:"Fruits",emoji:"🥜",price:350,unit:"250g",desc:"Premium mix of dry fruits — almonds, cashews, raisins and more.",image:""},
+  {id:37,name:"Desi Ghee",category:"Natural",emoji:"🫙",price:600,unit:"500g",desc:"Pure hand-churned desi cow ghee — the traditional way.",image:""},
+  {id:38,name:"Raw Honey (Shehad)",category:"Natural",emoji:"🍯",price:400,unit:"500g",desc:"100% pure natural honey harvested from organic beehives.",image:""},
+  {id:39,name:"Mustard Oil (Sarson Tel)",category:"Natural",emoji:"🫙",price:200,unit:"1L",desc:"Cold-pressed kachchi ghani mustard oil — pure and aromatic.",image:""},
+  {id:40,name:"Jaggery (Desi Gur)",category:"Natural",emoji:"🟫",price:120,unit:"500g",desc:"Pure unprocessed sugarcane jaggery — no chemicals or additives.",image:""},
+];
+
+let products = [];
+let settings = {};
+
+function loadData(){
+  const saved = localStorage.getItem('mgp_products');
+  products = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+  settings = JSON.parse(localStorage.getItem('mgp_settings')||'{}');
+}
+function saveData(){
+  localStorage.setItem('mgp_products', JSON.stringify(products));
+  window.dispatchEvent(new StorageEvent('storage',{key:'mgp_products',newValue:JSON.stringify(products)}));
+}
+
+// ========== INIT ==========
+function init(){
+  loadData();
+  renderStats();
+  renderTable();
+  renderCatList();
+  populateCatFilter();
+}
+
+// ========== STATS ==========
+function renderStats(){
+  const cats = [...new Set(products.map(p=>p.category))];
+  const withImg = products.filter(p=>p.image).length;
+  document.getElementById('statsRow').innerHTML=`
+    <div class="stat-card"><div class="stat-card-icon">📦</div><div class="stat-card-num">${products.length}</div><div class="stat-card-label">Total Products</div></div>
+    <div class="stat-card"><div class="stat-card-icon">🏷️</div><div class="stat-card-num">${cats.length}</div><div class="stat-card-label">Categories</div></div>
+    <div class="stat-card"><div class="stat-card-icon">🖼️</div><div class="stat-card-num">${withImg}</div><div class="stat-card-label">With Images</div></div>
+    <div class="stat-card"><div class="stat-card-icon">💰</div><div class="stat-card-num">₹${Math.min(...products.map(p=>p.price))}–${Math.max(...products.map(p=>p.price))}</div><div class="stat-card-label">Price Range</div></div>
+  `;
+}
+
+// ========== TABLE ==========
+const BADGE_MAP={Pickles:'pickle',Jams:'jam',Chutneys:'chutney',Murabba:'murabba',Fruits:'fruits',Oils:'oils',Natural:'natural'};
+function renderTable(){
+  const q = document.getElementById('prodSearch').value.toLowerCase();
+  const cat = document.getElementById('prodCatFilter').value;
+  let filtered = products.filter(p=>{
+    const mq = !q || p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
+    const mc = !cat || p.category===cat;
+    return mq&&mc;
+  });
+  const tb = document.getElementById('prodTable');
+  if(!filtered.length){tb.innerHTML=`<tr><td colspan="6" class="no-data">No products found.</td></tr>`;return;}
+  tb.innerHTML=filtered.map(p=>`
+    <tr>
+      <td><div class="product-img-cell">${p.image?`<img src="${gdriveDirect(p.image)}" onerror="this.parentElement.textContent='${p.emoji}'">`:`${p.emoji}`}</div></td>
+      <td><strong>${p.name}</strong></td>
+      <td><span class="badge badge-${BADGE_MAP[p.category]||'pickle'}">${p.category}</span></td>
+      <td><strong>₹${p.price}</strong></td>
+      <td>${p.unit}</td>
+      <td style="display:flex;gap:6px">
+        <button class="action-btn edit-btn" onclick="editProduct(${p.id})">✏️ Edit</button>
+        <button class="action-btn del-btn" onclick="deleteProduct(${p.id})">🗑️</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function populateCatFilter(){
+  const cats = [...new Set(products.map(p=>p.category))];
+  const sel = document.getElementById('prodCatFilter');
+  sel.innerHTML=`<option value="">All Categories</option>`+cats.map(c=>`<option>${c}</option>`).join('');
+}
+
+// ========== CATEGORIES LIST ==========
+function renderCatList(){
+  const cats = [...new Set(products.map(p=>p.category))];
+  const catEmoji = {Pickles:'🥒',Jams:'🍓',Chutneys:'🌶️',Murabba:'🍯',Fruits:'🍊',Oils:'🛢️',Natural:'🌿'};
+  document.getElementById('catList').innerHTML=cats.map(c=>`
+    <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center">
+      <div style="font-size:2.2rem">${catEmoji[c]||'📦'}</div>
+      <div style="font-weight:700;margin-top:8px">${c}</div>
+      <div style="color:var(--muted);font-size:0.82rem;margin-top:4px">${products.filter(p=>p.category===c).length} products</div>
+    </div>
+  `).join('');
+}
+
+// ========== MODAL ==========
+function openModal(p=null){
+  document.getElementById('editId').value = p?p.id:'';
+  document.getElementById('fName').value = p?p.name:'';
+  document.getElementById('fCat').value = p?p.category:'Pickles';
+  document.getElementById('fEmoji').value = p?p.emoji:'🥒';
+  document.getElementById('fPrice').value = p?p.price:'';
+  document.getElementById('fUnit').value = p?p.unit:'250g';
+  document.getElementById('fDesc').value = p?p.desc:'';
+  document.getElementById('fImage').value = p?p.image:'';
+  document.getElementById('modalTitle').textContent = p?'Edit Product':'Add New Product';
+  previewImg();
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+function editProduct(id){ openModal(products.find(p=>p.id===id)); }
+
+function saveProduct(){
+  const id = document.getElementById('editId').value;
+  const name=document.getElementById('fName').value.trim();
+  const price=parseFloat(document.getElementById('fPrice').value);
+  if(!name||!price){toast('❌ Name and Price are required!');return;}
+  const data={
+    name,category:document.getElementById('fCat').value,
+    emoji:document.getElementById('fEmoji').value||'📦',
+    price,unit:document.getElementById('fUnit').value||'unit',
+    desc:document.getElementById('fDesc').value,
+    image:document.getElementById('fImage').value.trim()
+  };
+  if(id){
+    const idx=products.findIndex(p=>p.id==id);
+    products[idx]={...products[idx],...data};
+    toast('✅ Product updated!');
+  } else {
+    data.id=Date.now();
+    products.push(data);
+    toast('✅ Product added!');
+  }
+  saveData(); closeModal(); renderTable(); renderStats(); populateCatFilter(); renderCatList();
+}
+
+function deleteProduct(id){
+  if(!confirm('Delete this product?'))return;
+  products=products.filter(p=>p.id!==id);
+  saveData(); renderTable(); renderStats();
+  toast('🗑️ Product deleted');
+}
+
+// ========== GOOGLE DRIVE URL CONVERTER ==========
+function gdriveDirect(url){
+  if(!url) return '';
+  const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if(m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w400`;
+  return url;
+}
+
+function previewImg(){
+  const raw = document.getElementById('fImage').value.trim();
+  const url = gdriveDirect(raw);
+  const prev = document.getElementById('imgPreview');
+  if(url){prev.src=url;prev.style.display='block';}
+  else prev.style.display='none';
+}
+
+// ========== SECTION NAV ==========
+function showSection(name){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(`sec-${name}`).classList.add('active');
+  event.currentTarget.classList.add('active');
+  document.getElementById('pageTitle').textContent=name.charAt(0).toUpperCase()+name.slice(1);
+}
+
+// ========== SETTINGS ==========
+function saveSettings(){
+  settings.wa=document.getElementById('settWa').value;
+  settings.name=document.getElementById('settName').value;
+  localStorage.setItem('mgp_settings',JSON.stringify(settings));
+  toast('✅ Settings saved!');
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify(products,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='moongrow_products.json'; a.click();
+}
+function resetData(){
+  if(!confirm('Reset all products to defaults? This cannot be undone.'))return;
+  products=JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+  saveData(); renderTable(); renderStats(); renderCatList(); populateCatFilter();
+  toast('🔄 Products reset to defaults');
+}
+
+// ========== TOAST ==========
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg;
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500);
+}
+</script>
+</body>
+</html>
