@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Panel – Moon Grow Pickle</title>
+<script>
+  if (location.hostname === 'moongrowpickles.shop') {
+    location.replace('https://www.moongrowpickles.shop' + location.pathname + location.search + location.hash);
+  }
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
